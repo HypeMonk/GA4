@@ -7,8 +7,9 @@
 3. Find your question below, paste the script into the console and press **Enter**
 4. Your answer will automatically be filled in the answer box
 
-> Scripts work for any student email — no manual input needed.
+> **Scripts work for any student email — no manual input needed.**
 
+> **Check out `Part-2.md` for Q3,Q4 and Q5 (deployment questions).**
 ---
 
 ## Scripts
