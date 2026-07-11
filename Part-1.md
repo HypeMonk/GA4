@@ -1362,6 +1362,16 @@ const aliases = [
     '@student.onlinedegree.iitm.ac.in', 
     '@onlinedegree.iitm.ac.in', 
     '@iitm.ac.in',
+    '@smail.iitm.ac.in',
+    '@iitmadras.ac.in',
+    '@smail.iitmadras.ac.in',
+    '@alum.iitm.ac.in',
+    '@alumni.iitm.ac.in',
+    '@research.iitm.ac.in',
+    '@gmail.com',
+    '@yahoo.com',
+    '@outlook.com',
+    '@hotmail.com',
     '' // Just the roll number
 ];
 
@@ -1406,6 +1416,7 @@ for (const alias of aliases) {
 }
 
 })();
+
 ```
 
 ---
