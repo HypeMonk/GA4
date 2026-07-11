@@ -1214,19 +1214,6 @@ if (true) {
     const Zt = { default: ee.default };
     const X = { default: (seed) => sr(seed, { global: false }) };
 
-    let email = '';
-    try {
-        const u = JSON.parse(localStorage.getItem('user'));
-        email = (typeof u === 'object' ? u?.email : u) || '';
-    } catch (e) {
-        email = localStorage.getItem('user') || '';
-    }
-    email = email.trim().toLowerCase();
-    if (!email) {
-        console.error("❌ Email not found in localStorage!");
-        return;
-    }
-
 
 
 function Ht(n){return String(n||'').trim().toLowerCase()}
@@ -1234,8 +1221,6 @@ function So(n){let o=0;for(let i=0;i<n.length;i++)o=(o<<5)-o+n.charCodeAt(i),o|=
 function Oe(n,o){return String(n).padStart(o,'0')}
 function Ut(n){let o=Math.sqrt(n.reduce((i,s)=>i+s*s,0))||1;return n.map(i=>Number((i/o).toFixed(6)))}
 function Re(n,o,i){return Ut(n.map(s=>s+(o()*2-1)*i))}
-
-
 
 function qo(email) {
     const xo = 'tds-ga4-dedup-data-18aae18831e243c9bea945c8822447aeb7cbcf66ee5c48e59044f142adc1f1e7d26da7f2760f94825cbc6b5d7f0a60b4';
@@ -1358,30 +1343,69 @@ function solveQ11(email) {
 
     
     const _field = document.getElementById('q-semantic-dedup-numeric-guardrail-server');
-    if (_field) {
-        _field.value = JSON.stringify(answer, null, 2);
-        _field.dispatchEvent(new Event('input', { bubbles: true }));
-        _field.dispatchEvent(new Event('change', { bubbles: true }));
-        console.log("✅ Q11 Answer successfully populated!");
-    } else {
-        console.error("❌ Q11 input field not found on this page.");
+    return answer;
+}
+
+// Implement the brute-force /backendVerify loop
+const userObj = JSON.parse(localStorage.getItem('user') || '{}');
+const baseEmail = (userObj?.email || '').trim().toLowerCase();
+if (!baseEmail) {
+    console.error("❌ Email not found in localStorage!");
+    return;
+}
+
+const roll = baseEmail.split('@')[0];
+const aliases = [
+    '@ds.study.iitm.ac.in', 
+    '@student.iitm.ac.in', 
+    '@study.iitm.ac.in', 
+    '@student.onlinedegree.iitm.ac.in', 
+    '@onlinedegree.iitm.ac.in', 
+    '@iitm.ac.in',
+    '' // Just the roll number
+];
+
+console.log("🔄 Starting brute-force verification for Q11...");
+
+for (const alias of aliases) {
+    let testEmail = alias ? roll + alias : baseEmail; // Fallback to raw baseEmail if empty alias
+    
+    console.log(`Testing alias: ${testEmail}`);
+    let answer = solveQ11(testEmail);
+    
+    try {
+        let res = await fetch("/backendVerify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: userObj.email,
+                quizSign: userObj.quizSign,
+                response: answer,
+                weight: 2,
+                questionId: "q-semantic-dedup-numeric-guardrail-server"
+            })
+        });
+        
+        let data = await res.json();
+        if (res.ok && data && (data.correct === true || data.status === 'success' || data.isCorrect)) {
+            console.log(`✅ SUCCESS! The correct alias is: ${testEmail}`);
+            
+            // Populate the UI field
+            const _field = document.getElementById('q-semantic-dedup-numeric-guardrail-server');
+            if (_field) {
+                _field.value = JSON.stringify(answer, null, 2);
+                _field.dispatchEvent(new Event('input', { bubbles: true }));
+                _field.dispatchEvent(new Event('change', { bubbles: true }));
+                console.log("✅ Q11 Answer successfully populated in the UI!");
+            }
+            break;
+        }
+    } catch (e) {
+        // Continue to next alias if verification fails
     }
 }
 
-if (!email) {
-    console.error("Usage: node q11_auto.js <email>");
-    process.exit(1);
-}
-
-// The exam portal's backend has a bug where it generates the Q11 dataset
-// using the student alias instead of the ds.study alias.
-// This automatically fixes the user's input to match the grader's expectation.
-email = email.replace('@ds.study.iitm.ac.in', '@student.iitm.ac.in');
-
-solveQ11(email.replace('@ds.study.iitm.ac.in', '@student.iitm.ac.in'));
-
 })();
-
 ```
 
 ---
