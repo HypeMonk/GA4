@@ -17,7 +17,6 @@
 ### Q1 — End-to-End Chunking & Hybrid Retrieval Pipeline
 
 ```javascript
-
 (async () => {
     const seedrandom = (await import('https://cdn.jsdelivr.net/npm/seedrandom/+esm')).default;
     const sr = seedrandom;
@@ -90,7 +89,7 @@ const results = {};
 
 queries.forEach(q => {
     const rawQuery = q.text.replace(/\(Ref: Q\d+\)/g, '');
-    const qTokens = tokenize(rawQuery);
+    const qTokens = [...new Set(tokenize(rawQuery))];
     const qEmb = query_embeddings[q.query_id];
 
     const scores = [];
@@ -125,19 +124,13 @@ queries.forEach(q => {
     // ranks (score desc, tie -> id asc)
     scores.sort((x, y) => {
         const d = y.sparse - x.sparse;
-        if (Math.abs(d) > 1e-9) return d;
-        if (x.id < y.id) return -1;
-        if (x.id > y.id) return 1;
-        return 0;
+        return Math.abs(d) > 1e-9 ? d : x.id.localeCompare(y.id);
     });
     const sparseRanks = {}; for (let i = 0; i < N; i++) sparseRanks[scores[i].id] = i + 1;
 
     scores.sort((x, y) => {
         const d = y.dense - x.dense;
-        if (Math.abs(d) > 1e-9) return d;
-        if (x.id < y.id) return -1;
-        if (x.id > y.id) return 1;
-        return 0;
+        return Math.abs(d) > 1e-9 ? d : x.id.localeCompare(y.id);
     });
     const denseRanks = {}; for (let i = 0; i < N; i++) denseRanks[scores[i].id] = i + 1;
 
@@ -145,10 +138,7 @@ queries.forEach(q => {
     for (const it of scores) it.rrf = 1/(rules.rrf_k + sparseRanks[it.id]) + 1/(rules.rrf_k + denseRanks[it.id]);
     scores.sort((x, y) => {
         const d = y.rrf - x.rrf;
-        if (Math.abs(d) > 1e-9) return d;
-        if (x.id < y.id) return -1;
-        if (x.id > y.id) return 1;
-        return 0;
+        return Math.abs(d) > 1e-9 ? d : x.id.localeCompare(y.id);
     });
 
     results[q.query_id] = scores.slice(0, rules.top_k).map(x => x.id);
@@ -169,7 +159,6 @@ queries.forEach(q => {
         console.error("❌ Q1 input field not found on this page.");
     }
 })();
-
 ```
 
 ---
